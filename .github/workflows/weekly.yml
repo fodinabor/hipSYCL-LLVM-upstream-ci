@@ -69,32 +69,32 @@ jobs:
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cpu
         cd ${GITHUB_WORKSPACE}/build/tests-cpu
-        cmake -DOPENSYCL_TARGETS="omp" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/tests
+        cmake -DOPENSYCL_TARGETS="omp" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/OpenSYCL/tests
         make -j2
     - name: build generic SSCP tests
       if: matrix.clang_version >= 14
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-sscp
         cd ${GITHUB_WORKSPACE}/build/tests-sscp
-        cmake -DOPENSYCL_TARGETS="generic" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/tests
+        cmake -DOPENSYCL_TARGETS="generic" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/OpenSYCL/tests
         make -j2
     - name: build CUDA tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cuda
         cd ${GITHUB_WORKSPACE}/build/tests-cuda
-        cmake -DOPENSYCL_TARGETS="cuda:sm_60" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
+        cmake -DOPENSYCL_TARGETS="cuda:sm_60" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/OpenSYCL/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
         make -j2
     - name: build ROCm tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-rocm
         cd ${GITHUB_WORKSPACE}/build/tests-rocm
-        cmake -DOPENSYCL_TARGETS="hip:gfx906" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
+        cmake -DOPENSYCL_TARGETS="hip:gfx906" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/OpenSYCL/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
         make -j2
     - name: build explicit multipass tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-emp
         cd ${GITHUB_WORKSPACE}/build/tests-emp
-        cmake -DOPENSYCL_TARGETS="omp;cuda.explicit-multipass:sm_60;hip:gfx906" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/tests
+        cmake -DOPENSYCL_TARGETS="omp;cuda.explicit-multipass:sm_60;hip:gfx906" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/OpenSYCL/tests
         make -j2
     - name: run CPU tests
       run: |
