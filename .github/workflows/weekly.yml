@@ -1,8 +1,17 @@
 name: LLVM Upstream weekly test
 
 on:
-    workflow_dispatch:
-    schedule:
+  workflow_dispatch:
+    inputs:
+      fork:
+        description: 'Repo orga/name'
+        required: true
+        default: 'OpenSYCL/OpenSYCL'
+      branch:
+        description: 'branch to test'
+        required: true
+        default: 'develop'
+  schedule:
         - cron: '0 5 * * 1'
 
 jobs:
@@ -19,7 +28,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: clone repository
       run: |
-        git clone --recurse-submodules https://github.com/OpenSYCL/OpenSYCL -b develop
+        git clone --recurse-submodules https://github.com/${{github.event.inputs.fork}} -b ${{github.event.inputs.branch}}
     - name: install Level Zero
       run: |
         wget https://github.com/oneapi-src/level-zero/releases/download/v1.2.3/level-zero-devel_1.2.3+u18.04_amd64.deb
