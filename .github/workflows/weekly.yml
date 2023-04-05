@@ -13,15 +13,6 @@ on:
         default: 'develop'
   schedule:
     - cron: '*/5 * * * *'
-      inputs:
-        fork:
-          description: 'Repo orga/name'
-          required: true
-          default: 'OpenSYCL/OpenSYCL'
-        branch:
-          description: 'branch to test'
-          required: true
-          default: 'develop'
 
 
 jobs:
@@ -36,9 +27,19 @@ jobs:
         os: ['ubuntu-20.04']
     steps:
     - uses: actions/checkout@v2
+    - name: setup env
+      if: ${{ github.event_name == 'workflow_dispatch' }}
+      run: |
+        echo "FORK=${{github.event.inputs.fork}}" >> $GITHUB_ENV
+        echo "BRANCH=${{github.event.inputs.branch}}" >> $GITHUB_ENV
+    - name: setup env
+      if: ${{ github.event_name == 'schedule' }}
+      run: |
+        echo "FORK=OpenSYCL/OpenSYCL" >> $GITHUB_ENV
+        echo "BRANCH=develop" >> $GITHUB_ENV
     - name: clone repository
       run: |
-        git clone --recurse-submodules https://github.com/${{github.event.inputs.fork}} -b ${{github.event.inputs.branch}} OpenSYCL
+        git clone --recurse-submodules https://github.com/${FORK} -b ${BRANCH} OpenSYCL
     - name: install Level Zero
       run: |
         wget https://github.com/oneapi-src/level-zero/releases/download/v1.2.3/level-zero-devel_1.2.3+u18.04_amd64.deb
