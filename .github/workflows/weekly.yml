@@ -28,7 +28,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: clone repository
       run: |
-        git clone --recurse-submodules https://github.com/${{github.event.inputs.fork}} -b ${{github.event.inputs.branch}}
+        git clone --recurse-submodules https://github.com/${{github.event.inputs.fork}} -b ${{github.event.inputs.branch}} OpenSYCL
     - name: install Level Zero
       run: |
         wget https://github.com/oneapi-src/level-zero/releases/download/v1.2.3/level-zero-devel_1.2.3+u18.04_amd64.deb
