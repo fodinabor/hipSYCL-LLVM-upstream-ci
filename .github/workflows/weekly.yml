@@ -1,0 +1,93 @@
+name: LLVM Upstream weekly test
+
+on:
+    workflow_dispatch:
+    schedule:
+        - cron: '0 5 * * 1'
+
+jobs:
+  test-llvm-upstream:
+    name: OpenSYCL/OpenSYCL with clang ${{ matrix.clang_version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        clang_version: ['latest']
+        cuda: ['12.0']
+        rocm_version: ['5.4.3']
+        os: ['ubuntu-20.04']
+    steps:
+    - uses: actions/checkout@v2
+    - name: clone repository
+      run: |
+        git clone --recurse-submodules https://github.com/OpenSYCL/OpenSYCL -b develop
+    - name: install Level Zero
+      run: |
+        wget https://github.com/oneapi-src/level-zero/releases/download/v1.2.3/level-zero-devel_1.2.3+u18.04_amd64.deb
+        wget https://github.com/oneapi-src/level-zero/releases/download/v1.2.3/level-zero_1.2.3+u18.04_amd64.deb
+        sudo dpkg -i ./level-zero*
+    - name: install CUDA 11.0
+      if: matrix.cuda == 11.0
+      run: |
+        mkdir -p /opt/OpenSYCL/cuda
+        wget -q -O cuda.sh http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run
+        sudo sh ./cuda.sh --override --silent --toolkit --no-man-page --no-drm --no-opengl-libs --installpath=/opt/OpenSYCL/cuda || true
+        echo "CUDA Version 11.0.0" | sudo tee /opt/OpenSYCL/cuda/version.txt
+    - name: install ROCm
+      run: |
+        sudo apt install libnuma-dev cmake unzip
+        wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
+        echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/${{matrix.rocm_version}} xenial main' | sudo tee /etc/apt/sources.list.d/rocm.list
+        sudo apt update
+        sudo apt install rocm-dev
+    - name: install LLVM
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh
+        sudo apt install libclang-dev clang-tools libomp-dev
+    - name: install boost (from apt)
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        sudo apt install libboost-all-dev
+    - name: build Open SYCL
+      run: |
+        mkdir build && cd build
+        cmake -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCLANG_EXECUTABLE_PATH=/usr/bin/clang++ -DLLVM_DIR=/usr/lib/llvm/cmake -DWITH_CUDA_BACKEND=ON -DWITH_ROCM_BACKEND=ON -DWITH_LEVEL_ZERO_BACKEND=ON -DCMAKE_INSTALL_PREFIX=`pwd`/install -DCUDA_TOOLKIT_ROOT_DIR=/opt/OpenSYCL/cuda -DROCM_PATH=/opt/rocm ../OpenSYCL
+        make -j2 install
+        cp /opt/OpenSYCL/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so
+        cp /opt/OpenSYCL/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so.1
+    - name: build CPU tests
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/build/tests-cpu
+        cd ${GITHUB_WORKSPACE}/build/tests-cpu
+        cmake -DOPENSYCL_TARGETS="omp" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/tests
+        make -j2
+    - name: build generic SSCP tests
+      if: matrix.clang_version >= 14
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/build/tests-sscp
+        cd ${GITHUB_WORKSPACE}/build/tests-sscp
+        cmake -DOPENSYCL_TARGETS="generic" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/tests
+        make -j2
+    - name: build CUDA tests
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/build/tests-cuda
+        cd ${GITHUB_WORKSPACE}/build/tests-cuda
+        cmake -DOPENSYCL_TARGETS="cuda:sm_60" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm/lib"
+        make -j2
+    - name: build ROCm tests
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/build/tests-rocm
+        cd ${GITHUB_WORKSPACE}/build/tests-rocm
+        cmake -DOPENSYCL_TARGETS="hip:gfx906" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm/lib"
+        make -j2
+    - name: build explicit multipass tests
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/build/tests-emp
+        cd ${GITHUB_WORKSPACE}/build/tests-emp
+        cmake -DOPENSYCL_TARGETS="omp;cuda.explicit-multipass:sm_60;hip:gfx906" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/tests
+        make -j2
+    - name: run CPU tests
+      run: |
+        cd ${GITHUB_WORKSPACE}/build/tests-cpu
+        LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/build/install/lib ./sycl_tests
