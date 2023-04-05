@@ -61,7 +61,7 @@ jobs:
     - name: build Open SYCL
       run: |
         mkdir build && cd build
-        cmake -DLLVM_DIR=/usr/lib/llvm-${{matrix.clang_version}}/cmake -DWITH_CUDA_BACKEND=ON -DWITH_ROCM_BACKEND=ON -DWITH_LEVEL_ZERO_BACKEND=ON -DCMAKE_INSTALL_PREFIX=`pwd`/install -DCUDA_TOOLKIT_ROOT_DIR=/opt/OpenSYCL/cuda -DROCM_PATH=/opt/rocm ../OpenSYCL
+        cmake -DLLVM_DIR=/usr/lib/llvm-${{matrix.clang_version}}/cmake -DWITH_CUDA_BACKEND=ON -DWITH_ROCM_BACKEND=ON -DWITH_LEVEL_ZERO_BACKEND=ON -DCMAKE_INSTALL_PREFIX=`pwd`/install -DCUDA_TOOLKIT_ROOT_DIR=/opt/OpenSYCL/cuda -DROCM_PATH=/opt/rocm -DLLVMSPIRV_BRANCH=main ../OpenSYCL
         make -j2 install
         cp /opt/OpenSYCL/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so
         cp /opt/OpenSYCL/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so.1
