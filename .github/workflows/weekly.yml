@@ -12,7 +12,17 @@ on:
         required: true
         default: 'develop'
   schedule:
-        - cron: '*/5 * * * *'
+    - cron: '*/5 * * * *'
+      inputs:
+        fork:
+          description: 'Repo orga/name'
+          required: true
+          default: 'OpenSYCL/OpenSYCL'
+        branch:
+          description: 'branch to test'
+          required: true
+          default: 'develop'
+
 
 jobs:
   test-llvm-upstream:
