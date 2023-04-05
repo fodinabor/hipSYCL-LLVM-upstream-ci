@@ -46,16 +46,13 @@ jobs:
         sudo apt install libclang-${{matrix.clang_version}}-dev clang-tools-${{matrix.clang_version}} libomp-${{matrix.clang_version}}-dev
         echo "CC=clang-${{matrix.clang_version}}" >> $GITHUB_ENV
         echo "CXX=clang++-${{matrix.clang_version}}" >> $GITHUB_ENV
-        which clang++-${{matrix.clang_version}}
-        ls -al /usr/bin
-        ls -al /usr/lib/llvm-17/cmake
     - name: install boost (from apt)
       run: |
         sudo apt install libboost-all-dev
     - name: build Open SYCL
       run: |
         mkdir build && cd build
-        cmake -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCLANG_EXECUTABLE_PATH=/usr/bin/clang++ -DLLVM_DIR=/usr/lib/llvm-${{matrix.clang_version}}/cmake -DWITH_CUDA_BACKEND=ON -DWITH_ROCM_BACKEND=ON -DWITH_LEVEL_ZERO_BACKEND=ON -DCMAKE_INSTALL_PREFIX=`pwd`/install -DCUDA_TOOLKIT_ROOT_DIR=/opt/OpenSYCL/cuda -DROCM_PATH=/opt/rocm ../OpenSYCL
+        cmake -DLLVM_DIR=/usr/lib/llvm-${{matrix.clang_version}}/cmake -DWITH_CUDA_BACKEND=ON -DWITH_ROCM_BACKEND=ON -DWITH_LEVEL_ZERO_BACKEND=ON -DCMAKE_INSTALL_PREFIX=`pwd`/install -DCUDA_TOOLKIT_ROOT_DIR=/opt/OpenSYCL/cuda -DROCM_PATH=/opt/rocm ../OpenSYCL
         make -j2 install
         cp /opt/OpenSYCL/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so
         cp /opt/OpenSYCL/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so.1
