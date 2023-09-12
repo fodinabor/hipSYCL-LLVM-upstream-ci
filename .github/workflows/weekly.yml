@@ -21,7 +21,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        clang_version: ['17']
+        clang_version: ['18']
         cuda: ['11.0']
         rocm_version: ['5.4.3']
         os: ['ubuntu-20.04']
