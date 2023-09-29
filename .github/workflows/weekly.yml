@@ -6,7 +6,7 @@ on:
       fork:
         description: 'Repo orga/name'
         required: true
-        default: 'OpenSYCL/OpenSYCL'
+        default: 'AdaptiveCpp/AdaptiveCpp'
       branch:
         description: 'branch to test'
         required: true
@@ -17,13 +17,13 @@ on:
 
 jobs:
   test-llvm-upstream:
-    name: OpenSYCL/OpenSYCL with clang ${{ matrix.clang_version }}
+    name: AdaptiveCpp/AdaptiveCpp with clang ${{ matrix.clang_version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         clang_version: ['18']
         cuda: ['11.0']
-        rocm_version: ['5.4.3']
+        rocm_version: ['5.7.0']
         os: ['ubuntu-20.04']
     steps:
     - uses: actions/checkout@v2
@@ -35,11 +35,11 @@ jobs:
     - name: setup env
       if: ${{ github.event_name == 'schedule' }}
       run: |
-        echo "FORK=OpenSYCL/OpenSYCL" >> $GITHUB_ENV
+        echo "FORK=AdaptiveCpp/AdaptiveCpp" >> $GITHUB_ENV
         echo "BRANCH=develop" >> $GITHUB_ENV
     - name: clone repository
       run: |
-        git clone --recurse-submodules https://github.com/${FORK} -b ${BRANCH} OpenSYCL
+        git clone --recurse-submodules https://github.com/${FORK} -b ${BRANCH} AdaptiveCpp
     - name: install Level Zero
       run: |
         wget https://github.com/oneapi-src/level-zero/releases/download/v1.2.3/level-zero-devel_1.2.3+u18.04_amd64.deb
@@ -47,10 +47,10 @@ jobs:
         sudo dpkg -i ./level-zero*
     - name: install CUDA 11.0
       run: |
-        mkdir -p /opt/OpenSYCL/cuda
+        mkdir -p /opt/AdaptiveCpp/cuda
         wget -q -O cuda.sh http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run
-        sudo sh ./cuda.sh --override --silent --toolkit --no-man-page --no-drm --no-opengl-libs --installpath=/opt/OpenSYCL/cuda || true
-        echo "CUDA Version 11.0.0" | sudo tee /opt/OpenSYCL/cuda/version.txt
+        sudo sh ./cuda.sh --override --silent --toolkit --no-man-page --no-drm --no-opengl-libs --installpath=/opt/AdaptiveCpp/cuda || true
+        echo "CUDA Version 11.0.0" | sudo tee /opt/AdaptiveCpp/cuda/version.txt
     - name: install ROCm
       run: |
         sudo apt install libnuma-dev cmake unzip
@@ -69,43 +69,43 @@ jobs:
     - name: install boost (from apt)
       run: |
         sudo apt install libboost-all-dev
-    - name: build Open SYCL
+    - name: build Adaptive Cpp
       run: |
         mkdir build && cd build
-        cmake -DLLVM_DIR=/usr/lib/llvm-${{matrix.clang_version}}/cmake -DWITH_CUDA_BACKEND=ON -DWITH_ROCM_BACKEND=ON -DWITH_LEVEL_ZERO_BACKEND=ON -DCMAKE_INSTALL_PREFIX=`pwd`/install -DCUDA_TOOLKIT_ROOT_DIR=/opt/OpenSYCL/cuda -DROCM_PATH=/opt/rocm -DLLVMSPIRV_BRANCH=main ../OpenSYCL
+        cmake -DLLVM_DIR=/usr/lib/llvm-${{matrix.clang_version}}/cmake -DWITH_CUDA_BACKEND=ON -DWITH_ROCM_BACKEND=ON -DWITH_LEVEL_ZERO_BACKEND=ON -DCMAKE_INSTALL_PREFIX=`pwd`/install -DCUDA_TOOLKIT_ROOT_DIR=/opt/AdaptiveCpp/cuda -DROCM_PATH=/opt/rocm -DLLVMSPIRV_BRANCH=main ../AdaptiveCpp
         make -j2 install
-        cp /opt/OpenSYCL/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so
-        cp /opt/OpenSYCL/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so.1
+        cp /opt/AdaptiveCpp/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so
+        cp /opt/AdaptiveCpp/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so.1
     - name: build CPU tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cpu
         cd ${GITHUB_WORKSPACE}/build/tests-cpu
-        cmake -DOPENSYCL_TARGETS="omp" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/OpenSYCL/tests
+        cmake -DACPP_TARGETS="omp" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
         make -j2
     - name: build generic SSCP tests
       if: matrix.clang_version >= 14
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-sscp
         cd ${GITHUB_WORKSPACE}/build/tests-sscp
-        cmake -DOPENSYCL_TARGETS="generic" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/OpenSYCL/tests
+        cmake -DACPP_TARGETS="generic" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
         make -j2
     - name: build CUDA tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cuda
         cd ${GITHUB_WORKSPACE}/build/tests-cuda
-        cmake -DOPENSYCL_TARGETS="cuda:sm_60" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/OpenSYCL/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
+        cmake -DACPP_TARGETS="cuda:sm_60" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
         make -j2
     - name: build ROCm tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-rocm
         cd ${GITHUB_WORKSPACE}/build/tests-rocm
-        cmake -DOPENSYCL_TARGETS="hip:gfx906" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/OpenSYCL/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
+        cmake -DACPP_TARGETS="hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
         make -j2
     - name: build explicit multipass tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-emp
         cd ${GITHUB_WORKSPACE}/build/tests-emp
-        cmake -DOPENSYCL_TARGETS="omp;cuda.explicit-multipass:sm_60;hip:gfx906" -DOpenSYCL_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/OpenSYCL ${GITHUB_WORKSPACE}/OpenSYCL/tests
+        cmake -DACPP_TARGETS="omp;cuda.explicit-multipass:sm_60;hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
         make -j2
     - name: run CPU tests
       run: |
