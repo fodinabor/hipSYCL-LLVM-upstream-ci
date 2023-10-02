@@ -72,7 +72,7 @@ jobs:
     - name: build Adaptive Cpp
       run: |
         mkdir build && cd build
-        cmake -DLLVM_DIR=/usr/lib/llvm-${{matrix.clang_version}}/cmake -DWITH_CUDA_BACKEND=ON -DWITH_ROCM_BACKEND=ON -DWITH_LEVEL_ZERO_BACKEND=ON -DCMAKE_INSTALL_PREFIX=`pwd`/install -DCUDA_TOOLKIT_ROOT_DIR=/opt/AdaptiveCpp/cuda -DROCM_PATH=/opt/rocm -DLLVMSPIRV_BRANCH=main ../AdaptiveCpp
+        cmake -DLLVM_DIR=/usr/lib/llvm-${{matrix.clang_version}}/cmake -DWITH_CUDA_BACKEND=ON -DWITH_ROCM_BACKEND=ON -DWITH_LEVEL_ZERO_BACKEND=ON -DCMAKE_INSTALL_PREFIX=`pwd`/install -DCUDA_TOOLKIT_ROOT_DIR=/opt/AdaptiveCpp/cuda -DROCM_PATH=/opt/rocm -DLLVMSPIRV_BRANCH=llvm_release_170 ../AdaptiveCpp
         make -j2 install
         cp /opt/AdaptiveCpp/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so
         cp /opt/AdaptiveCpp/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so.1
