@@ -25,7 +25,7 @@ jobs:
         clang_version: ['17']
         cuda: ['11.0']
         rocm_version: ['5.4.6', '5.5.3', '5.6.1', '5.7']
-        os: ['ubuntu-20.04', 'ubuntu-22.04']
+        os: ['ubuntu-22.04']
     steps:
     - uses: actions/checkout@v2
     - name: setup env
@@ -56,7 +56,8 @@ jobs:
       run: |
         sudo apt install libnuma-dev cmake unzip
         wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
-        echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/${{matrix.rocm_version}} focal main' | sudo tee /etc/apt/sources.list.d/rocm.list
+        echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/${{matrix.rocm_version}} jammy main' | sudo tee /etc/apt/sources.list.d/rocm.list
+        printf 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' | sudo tee /etc/apt/preferences.d/rocm-pin-600
         sudo apt update
         sudo apt install rocm-dev
     - name: install LLVM
