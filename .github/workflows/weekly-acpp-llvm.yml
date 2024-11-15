@@ -1,0 +1,103 @@
+name: LLVM Upstream weekly test
+
+on:
+  workflow_dispatch:
+    inputs:
+      fork:
+        description: 'Repo orga/name'
+        required: true
+        default: 'AdaptiveCpp/AdaptiveCpp'
+      branch:
+        description: 'branch to test'
+        required: true
+        default: 'develop'
+  schedule:
+    - cron: '0 5 * * 1,4'
+
+
+jobs:
+  test-acpp-llvm:
+    name: AdaptiveCpp/AdaptiveCpp with clang ${{ matrix.clang_version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        clang_version: ['18']
+        cuda: ['11.0']
+        rocm_version: ['5.6.1']
+        os: ['ubuntu-20.04']
+    steps:
+    - uses: actions/checkout@v2
+    - name: setup env
+      if: ${{ github.event_name == 'workflow_dispatch' }}
+      run: |
+        echo "FORK=${{github.event.inputs.fork}}" >> $GITHUB_ENV
+        echo "BRANCH=${{github.event.inputs.branch}}" >> $GITHUB_ENV
+    - name: setup env
+      if: ${{ github.event_name == 'schedule' }}
+      run: |
+        echo "FORK=AdaptiveCpp/AdaptiveCpp" >> $GITHUB_ENV
+        echo "BRANCH=develop" >> $GITHUB_ENV
+    - name: clone LLVM
+      run: |
+        git clone --recurse-submodules https://github.com/llvm/llvm-project --single-branch -b release/${{matrix.clang_version}}.x llvm
+    - name: clone repository
+      run: |
+        git clone --recurse-submodules https://github.com/${FORK} -b ${BRANCH} AdaptiveCpp
+    - name: install CUDA 11.0
+      run: |
+        mkdir -p /opt/AdaptiveCpp/cuda
+        wget -q -O cuda.sh http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run
+        sudo sh ./cuda.sh --override --silent --toolkit --no-man-page --no-drm --no-opengl-libs --installpath=/opt/AdaptiveCpp/cuda || true
+        echo "CUDA Version 11.0.0" | sudo tee /opt/AdaptiveCpp/cuda/version.txt
+    - name: install ROCm
+      run: |
+        sudo apt install libnuma-dev cmake unzip
+        wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
+        echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/${{matrix.rocm_version}} focal main' | sudo tee /etc/apt/sources.list.d/rocm.list
+        sudo apt update
+        sudo apt install rocm-dev
+    - name: install boost (from apt)
+      run: |
+        sudo apt install libboost-all-dev ccache
+    - name: build Adaptive Cpp
+      run: |
+        mkdir build && cd build
+        cmake ../llvm/llvm -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=`pwd`/../install -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_BUILD_LLVM_DYLIB=ON -DLLVM_LINK_LLVM_DYLIB=ON -DLLVM_CCACHE_BUILD=ON -DLLVM_EXTERNAL_PROJECTS=AdaptiveCpp -DLLVM_EXTERNAL_ADAPTIVECPP_SOURCE_DIR=`pwd`/../AdaptiveCpp -DLLVM_ADAPTIVECPP_LINK_INTO_TOOLS=ON -DWITH_OPENCL_BACKEND=OFF -DCUDA_TOOLKIT_ROOT_DIR=/opt/AdaptiveCpp/cuda -DROCM_PATH=/opt/rocm
+        make -j2 install
+        cp /opt/AdaptiveCpp/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so
+        cp /opt/AdaptiveCpp/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so.1
+    - name: build CPU tests
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/build/tests-cpu
+        cd ${GITHUB_WORKSPACE}/build/tests-cpu
+        cmake -DACPP_TARGETS="omp" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
+        make -j2
+    - name: build generic SSCP tests
+      if: matrix.clang_version >= 14
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/build/tests-sscp
+        cd ${GITHUB_WORKSPACE}/build/tests-sscp
+        cmake -DACPP_TARGETS="generic" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
+        make -j2
+    - name: build CUDA tests
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/build/tests-cuda
+        cd ${GITHUB_WORKSPACE}/build/tests-cuda
+        cmake -DACPP_TARGETS="cuda:sm_60" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
+        make -j2
+    - name: build ROCm tests
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/build/tests-rocm
+        cd ${GITHUB_WORKSPACE}/build/tests-rocm
+        cmake -DACPP_TARGETS="hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
+        make -j2
+    - name: build explicit multipass tests
+      run: |
+        mkdir ${GITHUB_WORKSPACE}/build/tests-emp
+        cd ${GITHUB_WORKSPACE}/build/tests-emp
+        cmake -DACPP_TARGETS="omp;cuda.explicit-multipass:sm_60;hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
+        make -j2
+    - name: run CPU tests
+      run: |
+        cd ${GITHUB_WORKSPACE}/build/tests-cpu
+        LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/build/install/lib ./sycl_tests
