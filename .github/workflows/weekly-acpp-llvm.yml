@@ -37,6 +37,14 @@ jobs:
       run: |
         echo "FORK=AdaptiveCpp/AdaptiveCpp" >> $GITHUB_ENV
         echo "BRANCH=develop" >> $GITHUB_ENV
+    - name: install LLVM
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh ${{matrix.clang_version}}
+        sudo apt install libclang-${{matrix.clang_version}}-dev clang-tools-${{matrix.clang_version}} libomp-${{matrix.clang_version}}-dev
+        echo "CC=clang-${{matrix.clang_version}}" >> $GITHUB_ENV
+        echo "CXX=clang++-${{matrix.clang_version}}" >> $GITHUB_ENV
     - name: clone LLVM
       run: |
         git clone --recurse-submodules https://github.com/llvm/llvm-project --single-branch -b release/${{matrix.clang_version}}.x llvm
