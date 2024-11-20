@@ -73,40 +73,44 @@ jobs:
       run: |
         mkdir build && cd build
         cmake ../llvm/llvm -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=`pwd`/../install -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_BUILD_LLVM_DYLIB=ON -DLLVM_LINK_LLVM_DYLIB=ON -DLLVM_CCACHE_BUILD=ON -DLLVM_EXTERNAL_PROJECTS=AdaptiveCpp -DLLVM_EXTERNAL_ADAPTIVECPP_SOURCE_DIR=`pwd`/../AdaptiveCpp -DLLVM_ADAPTIVECPP_LINK_INTO_TOOLS=ON -DWITH_OPENCL_BACKEND=OFF -DCUDA_TOOLKIT_ROOT_DIR=/opt/AdaptiveCpp/cuda -DROCM_PATH=/opt/rocm
-        make -j2 install
+        ninja -j2 install
         cp /opt/AdaptiveCpp/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so
         cp /opt/AdaptiveCpp/cuda/lib64/stubs/libcuda.so `pwd`/install/lib/libcuda.so.1
+        echo "CC=clang" >> $GITHUB_ENV
+        echo "CXX=clang++" >> $GITHUB_ENV
+        echo "PATH=`pwd`/../install/bin:$PATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=`pwd`/../install/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
     - name: build CPU tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cpu
         cd ${GITHUB_WORKSPACE}/build/tests-cpu
-        cmake -DACPP_TARGETS="omp" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
-        make -j2
+        cmake -GNinja -DACPP_TARGETS="omp" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
+        ninja -j2
     - name: build generic SSCP tests
       if: matrix.clang_version >= 14
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-sscp
         cd ${GITHUB_WORKSPACE}/build/tests-sscp
-        cmake -DACPP_TARGETS="generic" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
-        make -j2
+        cmake -GNinja -DACPP_TARGETS="generic" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
+        ninja -j2
     - name: build CUDA tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cuda
         cd ${GITHUB_WORKSPACE}/build/tests-cuda
-        cmake -DACPP_TARGETS="cuda:sm_60" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
-        make -j2
+        cmake -GNinja -DACPP_TARGETS="cuda:sm_60" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
+        ninja -j2
     - name: build ROCm tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-rocm
         cd ${GITHUB_WORKSPACE}/build/tests-rocm
-        cmake -DACPP_TARGETS="hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
-        make -j2
+        cmake -GNinja -DACPP_TARGETS="hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
+        ninja -j2
     - name: build explicit multipass tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-emp
         cd ${GITHUB_WORKSPACE}/build/tests-emp
-        cmake -DACPP_TARGETS="omp;cuda.explicit-multipass:sm_60;hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
-        make -j2
+        cmake -GNinja -DACPP_TARGETS="omp;cuda.explicit-multipass:sm_60;hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/build/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
+        ninja -j2
     - name: run CPU tests
       run: |
         cd ${GITHUB_WORKSPACE}/build/tests-cpu
