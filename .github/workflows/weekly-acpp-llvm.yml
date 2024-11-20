@@ -45,6 +45,8 @@ jobs:
         sudo apt install libclang-${{matrix.clang_version}}-dev clang-tools-${{matrix.clang_version}} libomp-${{matrix.clang_version}}-dev ninja-build cmake
         echo "CC=clang-${{matrix.clang_version}}" >> $GITHUB_ENV
         echo "CXX=clang++-${{matrix.clang_version}}" >> $GITHUB_ENV
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2
     - name: clone LLVM
       run: |
         git clone --recurse-submodules https://github.com/llvm/llvm-project --single-branch -b release/${{matrix.clang_version}}.x llvm
