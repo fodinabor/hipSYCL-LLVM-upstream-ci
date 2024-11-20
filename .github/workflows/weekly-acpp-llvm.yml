@@ -1,4 +1,4 @@
-name: LLVM Upstream weekly test
+name: AdaptiveCpp-LLVM Upstream
 
 on:
   workflow_dispatch:
@@ -37,12 +37,12 @@ jobs:
       run: |
         echo "FORK=AdaptiveCpp/AdaptiveCpp" >> $GITHUB_ENV
         echo "BRANCH=develop" >> $GITHUB_ENV
-    - name: install LLVM
+    - name: install compilation suite
       run: |
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh ${{matrix.clang_version}}
-        sudo apt install libclang-${{matrix.clang_version}}-dev clang-tools-${{matrix.clang_version}} libomp-${{matrix.clang_version}}-dev
+        sudo apt install libclang-${{matrix.clang_version}}-dev clang-tools-${{matrix.clang_version}} libomp-${{matrix.clang_version}}-dev ninja-build cmake
         echo "CC=clang-${{matrix.clang_version}}" >> $GITHUB_ENV
         echo "CXX=clang++-${{matrix.clang_version}}" >> $GITHUB_ENV
     - name: clone LLVM
@@ -52,14 +52,16 @@ jobs:
       run: |
         git clone --recurse-submodules https://github.com/${FORK} -b ${BRANCH} AdaptiveCpp
     - name: install CUDA 11.0
+      if: false
       run: |
         mkdir -p /opt/AdaptiveCpp/cuda
         wget -q -O cuda.sh http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run
         sudo sh ./cuda.sh --override --silent --toolkit --no-man-page --no-drm --no-opengl-libs --installpath=/opt/AdaptiveCpp/cuda || true
         echo "CUDA Version 11.0.0" | sudo tee /opt/AdaptiveCpp/cuda/version.txt
     - name: install ROCm
+      if: false
       run: |
-        sudo apt install libnuma-dev cmake unzip
+        sudo apt install libnuma-dev unzip
         wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
         echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/${{matrix.rocm_version}} focal main' | sudo tee /etc/apt/sources.list.d/rocm.list
         sudo apt update
