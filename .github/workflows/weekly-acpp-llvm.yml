@@ -44,8 +44,11 @@ jobs:
         chmod +x llvm.sh
         sudo ./llvm.sh ${{matrix.clang_version}}
         sudo apt install libclang-${{matrix.clang_version}}-dev clang-tools-${{matrix.clang_version}} libomp-${{matrix.clang_version}}-dev ninja-build cmake
-        sudo ln -s /usr/lib/llvm-${{matrix.clang_version}}/lib/libomp.so /usr/lib/libomp.so
+        
         ls -alh /usr/lib/llvm-${{matrix.clang_version}}/lib
+        ls -alh /usr/lib/
+        sudo ln -s /usr/lib/llvm-${{matrix.clang_version}}/lib/libomp.so /usr/lib/libomp.so
+        ls -alh /usr/lib/
         echo "LD_LIBRARY_PATH=/usr/lib/llvm-${{matrix.clang_version}}/lib" >> $GITHUB_ENV
         echo "CC=clang-${{matrix.clang_version}}" >> $GITHUB_ENV
         echo "CXX=clang++-${{matrix.clang_version}}" >> $GITHUB_ENV
@@ -57,7 +60,7 @@ jobs:
           ${{ github.job }}
     - name: clone LLVM
       run: |
-        git clone --recurse-submodules https://github.com/llvm/llvm-project --single-branch -b release/${{matrix.clang_version}}.x llvm
+        git clone --recurse-submodules https://github.com/llvm/llvm-project --depth=1 -b release/${{matrix.clang_version}}.x llvm
     - name: clone repository
       run: |
         git clone --recurse-submodules https://github.com/${FORK} -b ${BRANCH} AdaptiveCpp
@@ -90,36 +93,36 @@ jobs:
         cmake ../llvm/llvm -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DLLVM_TARGETS_TO_BUILD="X86;${TARGETS_TO_BUILD}" -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_BUILD_LLVM_DYLIB=ON -DLLVM_LINK_LLVM_DYLIB=ON -DLLVM_CCACHE_BUILD=ON -DLLVM_EXTERNAL_PROJECTS=AdaptiveCpp -DLLVM_EXTERNAL_ADAPTIVECPP_SOURCE_DIR=`pwd`/../AdaptiveCpp -DLLVM_ADAPTIVECPP_LINK_INTO_TOOLS=ON -DWITH_OPENCL_BACKEND=OFF -DCUDA_TOOLKIT_ROOT_DIR=/opt/AdaptiveCpp/cuda -DROCM_PATH=/opt/rocm
         ninja -j2 install
 
-        echo "CC=clang" >> $GITHUB_ENV
-        echo "CXX=clang++" >> $GITHUB_ENV
-        echo "PATH=${GITHUB_WORKSPACE}/install/bin:$PATH" >> $GITHUB_ENV
+        # echo "CC=clang" >> $GITHUB_ENV
+        # echo "CXX=clang++" >> $GITHUB_ENV
+        # echo "PATH=${GITHUB_WORKSPACE}/install/bin:$PATH" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
     - name: build CPU tests
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cpu
         cd ${GITHUB_WORKSPACE}/build/tests-cpu
-        cmake -GNinja -DACPP_TARGETS="omp" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib" -DOMP_ROOT="/usr/lib/llvm-${{matrix.clang_version}}/"
+        cmake -GNinja -DACPP_TARGETS="omp" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
         ninja -j2
     - name: build generic SSCP tests
       if: matrix.clang_version >= 14
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-sscp
         cd ${GITHUB_WORKSPACE}/build/tests-sscp
-        cmake -GNinja -DACPP_TARGETS="generic" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
+        cmake -GNinja -DACPP_TARGETS="generic" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
         ninja -j2
     - name: build CUDA tests
       if: ${{ matrix.cuda_or_rocm == 'cuda' }}
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cuda
         cd ${GITHUB_WORKSPACE}/build/tests-cuda
-        cmake -GNinja -DACPP_TARGETS="cuda:sm_60" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
+        cmake -GNinja -DACPP_TARGETS="cuda:sm_60" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
         ninja -j2
     - name: build ROCm tests
       if: ${{ matrix.cuda_or_rocm == 'rocm' }}
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-rocm
         cd ${GITHUB_WORKSPACE}/build/tests-rocm
-        cmake -GNinja -DACPP_TARGETS="hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
+        cmake -GNinja -DACPP_TARGETS="hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
         ninja -j2
     - name: run CPU tests
       run: |
