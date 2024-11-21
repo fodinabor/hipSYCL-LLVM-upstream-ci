@@ -17,7 +17,7 @@ on:
 
 jobs:
   test-acpp-llvm:
-    name: AdaptiveCpp/AdaptiveCpp with clang ${{ matrix.clang_version }}
+    name: AdaptiveCpp/AdaptiveCpp with clang ${{ matrix.clang_version }} and ${{ matrix.cuda_or_rocm }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -48,6 +48,8 @@ jobs:
         echo "CXX=clang++-${{matrix.clang_version}}" >> $GITHUB_ENV
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ github.job }}
     - name: clone LLVM
       run: |
         git clone --recurse-submodules https://github.com/llvm/llvm-project --single-branch -b release/${{matrix.clang_version}}.x llvm
@@ -91,14 +93,14 @@ jobs:
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cpu
         cd ${GITHUB_WORKSPACE}/build/tests-cpu
-        cmake -GNinja -DACPP_TARGETS="omp" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
+        cmake -GNinja -DACPP_TARGETS="omp" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
         ninja -j2
     - name: build generic SSCP tests
       if: matrix.clang_version >= 14
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-sscp
         cd ${GITHUB_WORKSPACE}/build/tests-sscp
-        cmake -GNinja -DACPP_TARGETS="generic" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests
+        cmake -GNinja -DACPP_TARGETS="generic" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
         ninja -j2
     - name: build CUDA tests
       if: ${{ matrix.cuda_or_rocm == 'cuda' }}
