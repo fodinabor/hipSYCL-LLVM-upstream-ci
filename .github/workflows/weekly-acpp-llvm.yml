@@ -23,6 +23,7 @@ jobs:
     strategy:
       matrix:
         clang_version: ['18']
+        base_compiler: ['17']
         cuda: ['11.0']
         rocm_version: ['5.6.1']
         cuda_or_rocm: ['cuda', 'rocm']
@@ -43,10 +44,10 @@ jobs:
       run: |
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
-        sudo ./llvm.sh ${{matrix.clang_version}}
-        sudo apt install libclang-${{matrix.clang_version}}-dev clang-tools-${{matrix.clang_version}} libomp-${{matrix.clang_version}}-dev ninja-build cmake
-        echo "CC=clang-${{matrix.clang_version}}" >> $GITHUB_ENV
-        echo "CXX=clang++-${{matrix.clang_version}}" >> $GITHUB_ENV
+        sudo ./llvm.sh ${{matrix.base_compiler}}
+        sudo apt install libclang-${{matrix.base_compiler}}-dev clang-tools-${{matrix.base_compiler}} libomp-${{matrix.base_compiler}}-dev ninja-build cmake
+        echo "CC=clang-${{matrix.base_compiler}}" >> $GITHUB_ENV
+        echo "CXX=clang++-${{matrix.base_compiler}}" >> $GITHUB_ENV
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -96,28 +97,28 @@ jobs:
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cpu
         cd ${GITHUB_WORKSPACE}/build/tests-cpu
-        cmake -GNinja -DACPP_TARGETS="omp" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
+        cmake -GNinja -DACPP_TARGETS="omp" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.base_compiler}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
         ninja -j2
     - name: build generic SSCP tests
       if: matrix.clang_version >= 14
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-sscp
         cd ${GITHUB_WORKSPACE}/build/tests-sscp
-        cmake -GNinja -DACPP_TARGETS="generic" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
+        cmake -GNinja -DACPP_TARGETS="generic" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.base_compiler}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
         ninja -j2
     - name: build CUDA tests
       if: ${{ matrix.cuda_or_rocm == 'cuda' }}
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cuda
         cd ${GITHUB_WORKSPACE}/build/tests-cuda
-        cmake -GNinja -DACPP_TARGETS="cuda:sm_60" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
+        cmake -GNinja -DACPP_TARGETS="cuda:sm_60" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.base_compiler}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
         ninja -j2
     - name: build ROCm tests
       if: ${{ matrix.cuda_or_rocm == 'rocm' }}
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-rocm
         cd ${GITHUB_WORKSPACE}/build/tests-rocm
-        cmake -GNinja -DACPP_TARGETS="hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
+        cmake -GNinja -DACPP_TARGETS="hip:gfx906" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.base_compiler}}/lib" -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
         ninja -j2
     - name: run CPU tests
       run: |
