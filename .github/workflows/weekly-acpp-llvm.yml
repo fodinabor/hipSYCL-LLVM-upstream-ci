@@ -13,6 +13,7 @@ on:
         default: 'develop'
   schedule:
     - cron: '0 5 * * 1,4'
+  push:
 
 
 jobs:
@@ -34,10 +35,10 @@ jobs:
         echo "FORK=${{github.event.inputs.fork}}" >> $GITHUB_ENV
         echo "BRANCH=${{github.event.inputs.branch}}" >> $GITHUB_ENV
     - name: setup env
-      if: ${{ github.event_name == 'schedule' }}
+      if: ${{ github.event_name == 'schedule' || github.event_name == 'push' }}
       run: |
         echo "FORK=AdaptiveCpp/AdaptiveCpp" >> $GITHUB_ENV
-        echo "BRANCH=develop" >> $GITHUB_ENV
+        echo "BRANCH=feature/link-into-llvm" >> $GITHUB_ENV
     - name: install compilation suite
       run: |
         wget https://apt.llvm.org/llvm.sh
