@@ -44,6 +44,7 @@ jobs:
         chmod +x llvm.sh
         sudo ./llvm.sh ${{matrix.clang_version}}
         sudo apt install libclang-${{matrix.clang_version}}-dev clang-tools-${{matrix.clang_version}} libomp-${{matrix.clang_version}}-dev ninja-build cmake
+        sudo ln -s /usr/lib/llvm-${{matrix.clang_version}}/lib/libomp.so /usr/lib/libomp.so
         echo "CC=clang-${{matrix.clang_version}}" >> $GITHUB_ENV
         echo "CXX=clang++-${{matrix.clang_version}}" >> $GITHUB_ENV
     - name: ccache
