@@ -95,6 +95,8 @@ jobs:
       run: |
         mkdir ${GITHUB_WORKSPACE}/build/tests-cpu
         cd ${GITHUB_WORKSPACE}/build/tests-cpu
+        clang++ -fopenmp /dev/null -L/usr/lib/llvm-${{matrix.clang_version}}/lib -v -shared -o /dev/null 
+        clang -fopenmp /dev/null -L/usr/lib/llvm-${{matrix.clang_version}}/lib -v -shared -o /dev/null 
         cmake -GNinja -DACPP_TARGETS="omp" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/llvm-${{matrix.clang_version}}/lib"
         ninja -j2
     - name: build generic SSCP tests
