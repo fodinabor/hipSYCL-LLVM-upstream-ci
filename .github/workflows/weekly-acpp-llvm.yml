@@ -45,7 +45,7 @@ jobs:
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh ${{matrix.base_compiler}}
-        sudo apt install libclang-${{matrix.base_compiler}}-dev clang-tools-${{matrix.base_compiler}} libomp-${{matrix.base_compiler}}-dev ninja-build cmake build-essentials
+        sudo apt install libclang-${{matrix.base_compiler}}-dev clang-tools-${{matrix.base_compiler}} libomp-${{matrix.base_compiler}}-dev ninja-build cmake build-essential
         echo "CC=clang-${{matrix.base_compiler}}" >> $GITHUB_ENV
         echo "CXX=clang++-${{matrix.base_compiler}}" >> $GITHUB_ENV
     - name: ccache
