@@ -69,7 +69,7 @@ jobs:
     - name: cuda-toolkit
       uses: Jimver/cuda-toolkit@v0.2.19
       with:
-        method: network
+        method: local
         log-file-suffix: ${{matrix.clang_version}}_${{matrix.os}}.txt
         cuda: ${{matrix.cuda}}
     - name: Download Ninja
