@@ -94,7 +94,7 @@ jobs:
         Invoke-WebRequest $boostURL -OutFile boost.7z
         7z.exe x boost.7z
         cd $boostFolderName
-        .\bootstrap.bat clang-win
+        .\bootstrap.bat
         .\b2.exe --with-context --with-fiber --with-atomic --with-filesystem --with-test toolset=clang-win address-model=64 variant=release --build-type=complete install --prefix=$env:GITHUB_WORKSPACE/install
 
     - name: build Adaptive Cpp
