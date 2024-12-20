@@ -42,6 +42,8 @@ jobs:
       run: |
         echo "FORK=AdaptiveCpp/AdaptiveCpp" >> $env:GITHUB_ENV
         echo "BRANCH=feature/link-into-llvm" >> $env:GITHUB_ENV
+    - name: Use MSVC Command prompt
+      uses: ilammy/msvc-dev-cmd@v1
     - name: Install LLVM and Clang
       uses: KyleMayes/install-llvm-action@v2.0.5
       with:
@@ -84,8 +86,8 @@ jobs:
       shell: powershell
       run: |
         $env:PATH = "$env:LLVM_PATH\bin;$env:PATH"
-        $env:CC = clang-cl
-        $env:CXX = clang-cl
+        $env:CC = "clang-cl"
+        $env:CXX = "clang-cl"
 
         $boostURL = "https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.7z"
         $boostFolderName = $boostUrl.Split("/")[-1].Split(".")[0]
@@ -99,8 +101,8 @@ jobs:
       shell: powershell
       run: |
         $env:PATH = "$env:LLVM_PATH\bin;$env:PATH"
-        $env:CC = clang-cl
-        $env:CXX = clang-cl
+        $env:CC = "clang-cl"
+        $env:CXX = "clang-cl"
 
         cd $env:GITHUB_WORKSPACE
         md build
