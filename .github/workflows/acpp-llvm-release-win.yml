@@ -24,7 +24,7 @@ jobs:
       matrix:
         clang_version: ['18']
         base_compiler: ['17.0']
-        cuda: ['12.0']
+        cuda: ['12.6.1']
         cuda_or_rocm: ['cuda']
         os: ['windows-2022']
       fail-fast: false
