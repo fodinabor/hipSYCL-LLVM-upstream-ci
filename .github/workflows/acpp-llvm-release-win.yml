@@ -110,7 +110,7 @@ jobs:
 
         cmake ../llvm/llvm -GNinja `
           -DCMAKE_BUILD_TYPE=Release `
-          -DCMAKE_INSTALL_PREFIX= $env:GITHUB_WORKSPACE/install`
+          -DCMAKE_INSTALL_PREFIX=$env:GITHUB_WORKSPACE/install `
           -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" `
           -DLLVM_ENABLE_PROJECTS="clang;openmp;lld;compiler-rt" `
           -DLLVM_PARALLEL_LINK_JOBS=1 `
