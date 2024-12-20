@@ -84,8 +84,8 @@ jobs:
       shell: powershell
       run: |
         $env:PATH = "$env:LLVM_PATH\bin;$env:PATH"
-        $enc:CC = clang-cl
-        $enc:CXX = clang-cl
+        $env:CC = clang-cl
+        $env:CXX = clang-cl
 
         $boostURL = "https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.7z"
         $boostFolderName = $boostUrl.Split("/")[-1].Split(".")[0]
@@ -99,8 +99,8 @@ jobs:
       shell: powershell
       run: |
         $env:PATH = "$env:LLVM_PATH\bin;$env:PATH"
-        $enc:CC = clang-cl
-        $enc:CXX = clang-cl
+        $env:CC = clang-cl
+        $env:CXX = clang-cl
 
         cd $env:GITHUB_WORKSPACE
         md build
