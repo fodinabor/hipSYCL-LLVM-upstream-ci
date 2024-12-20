@@ -1,0 +1,161 @@
+name: AdaptiveCpp-LLVM Windows release
+
+on:
+  workflow_dispatch:
+    inputs:
+      fork:
+        description: 'Repo orga/name'
+        required: true
+        default: 'AdaptiveCpp/AdaptiveCpp'
+      branch:
+        description: 'branch to test'
+        required: true
+        default: 'develop'
+  schedule:
+    - cron: '0 5 * * 1,4'
+  push:
+
+
+jobs:
+  test-acpp-llvm:
+    name: AdaptiveCpp/AdaptiveCpp with clang ${{ matrix.clang_version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        clang_version: ['18']
+        base_compiler: ['17']
+        cuda: ['12.0']
+        cuda_or_rocm: ['cuda']
+        os: ['ubuntu-20.04']
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v2
+    - name: setup env
+      if: ${{ github.event_name == 'workflow_dispatch' }}
+      shell: powershell
+      run: |
+        echo "FORK=${{github.event.inputs.fork}}" >> $env:GITHUB_ENV
+        echo "BRANCH=${{github.event.inputs.branch}}" >> $env:GITHUB_ENV
+    - name: setup env
+      if: ${{ github.event_name == 'schedule' || github.event_name == 'push' }}
+      shell: powershell
+      run: |
+        echo "FORK=AdaptiveCpp/AdaptiveCpp" >> $env:GITHUB_ENV
+        echo "BRANCH=feature/link-into-llvm" >> $env:GITHUB_ENV
+    - name: Install LLVM and Clang
+      uses: KyleMayes/install-llvm-action@v2.0.5
+      with:
+        version: "${{matrix.base_compiler}}.1"
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        variant: sccache
+        key: ${{ github.job }}-${{matrix.clang_version}}-${{matrix.cuda_or_rocm}}
+        restore-keys: |
+          ${{ github.job }}
+    - name: Cache Boost
+      id: cache-boost
+      uses: actions/cache@v4
+      with:
+        path: ${{github.workspace}}/boost_1_81_0
+        key: ${{runner.os}}-boost1810
+    - name: clone LLVM
+      run: |
+        git clone --recurse-submodules https://github.com/llvm/llvm-project --single-branch -b release/${{matrix.clang_version}}.x llvm
+    - name: clone repository
+      run: |
+        git clone --recurse-submodules https://github.com/${FORK} -b ${BRANCH} AdaptiveCpp
+    - name: cuda-toolkit
+      uses: Jimver/cuda-toolkit@v0.2.19
+      with:
+        method: network
+        log-file-suffix: ${{matrix.clang_version}}_${{matrix.os}}.txt
+        cuda: ${{matrix.cuda}}
+    - name: Download Ninja
+      shell: powershell
+      run: |
+        $ninjaURL = "https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-win.zip"
+        Invoke-WebRequest $ninjaURL -OutFile ninja.zip
+        Expand-Archive -Path ninja.zip -DestinationPath $env:GITHUB_WORKSPACE\ninja_install
+        echo "PATH=$env:GITHUB_WORKSPACE/ninja_install:$env:PATH" >> $env:GITHUB_ENV
+    - name: Build boost
+      if: steps.cache-boost.outputs.cache-hit != 'true'
+      shell: powershell
+      run: |
+        $env:PATH = "$env:LLVM_PATH\bin;$env:PATH"
+        $enc:CC = clang-cl
+        $enc:CXX = clang-cl
+
+        $boostURL = "https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.7z"
+        $boostFolderName = $boostUrl.Split("/")[-1].Split(".")[0]
+        Invoke-WebRequest $boostURL -OutFile boost.7z
+        7z.exe x boost.7z
+        cd $boostFolderName
+        .\bootstrap.bat clang-win
+        .\b2.exe --with-context --with-fiber --with-atomic --with-filesystem --with-test toolset=clang-win address-model=64 variant=release --build-type=complete install --prefix=$env:GITHUB_WORKSPACE/install
+
+    - name: build Adaptive Cpp
+      shell: powershell
+      run: |
+        $env:PATH = "$env:LLVM_PATH\bin;$env:PATH"
+        $enc:CC = clang-cl
+        $enc:CXX = clang-cl
+
+        cd $env:GITHUB_WORKSPACE
+        md build
+        cd build
+
+        cmake ../llvm/llvm -GNinja `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DCMAKE_INSTALL_PREFIX= $env:GITHUB_WORKSPACE/install`
+          -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" `
+          -DLLVM_ENABLE_PROJECTS="clang;openmp;lld;compiler-rt" `
+          -DLLVM_PARALLEL_LINK_JOBS=1 `
+          -DLLVM_EXTERNAL_PROJECTS=AdaptiveCpp `
+          -DLLVM_EXTERNAL_ADAPTIVECPP_SOURCE_DIR=$env:GITHUB_WORKSPACE/AdaptiveCpp `
+          -DLLVM_ADAPTIVECPP_LINK_INTO_TOOLS=ON `
+          -DWITH_OPENCL_BACKEND=OFF `
+          -DBoost_DIR=$env:GITHUB_WORKSPACE\lib\cmake\Boost-1.81.0 `
+          -DLLVM_TOOL_BUGPOINT_BUILD=OFF `
+          -DOPENMP_ENABLE_LIBOMPTARGET=OFF `
+          -DLLVM_INCLUDE_TESTS=OFF `
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache `
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+
+        ninja -j2 install
+
+        echo "CC=clang" >> $env:GITHUB_ENV
+        echo "CXX=clang++" >> $env:GITHUB_ENV
+        echo "PATH=$env:GITHUB_WORKSPACE/install/bin:$env:PATH" >> $env:GITHUB_ENV
+    - name: build CPU tests
+      shell: powershell
+      run: |
+        md $env:GITHUB_WORKSPACE/build/tests-cpu
+        cd $env:GITHUB_WORKSPACE/build/tests-cpu
+        cmake -GNinja -DACPP_TARGETS="omp" `
+          -DAdaptiveCpp_DIR=$env:GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp `
+          $env:GITHUB_WORKSPACE/AdaptiveCpp/tests `
+          -DLLVM_DIR=$env:GITHUB_WORKSPACE/install/lib/cmake/llvm
+        ninja -j2
+    - name: build generic SSCP tests
+      if: matrix.clang_version >= 14
+      run: |
+        md $env:GITHUB_WORKSPACE/build/tests-sscp
+        cd $env:GITHUB_WORKSPACE/build/tests-sscp
+        cmake -GNinja -DACPP_TARGETS="generic" `
+          -DAdaptiveCpp_DIR=$env:GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp `
+          $env:GITHUB_WORKSPACE/AdaptiveCpp/tests `
+          -DLLVM_DIR=$env:GITHUB_WORKSPACE/install/lib/cmake/llvm
+        ninja -j2
+    - name: run CPU tests
+      run: |
+        cd $env:GITHUB_WORKSPACE/build/tests-cpu
+        ./sycl_tests
+    - name: run SSCP CPU tests
+      run: |
+        cd $env:GITHUB_WORKSPACE/build/tests-sscp
+        ./sycl_tests
+    - uses: actions/upload-artifact@v4
+      with:
+        name: AdaptiveCpp-LLVM${{matrix.clang_version}}-Win
+        path: install
