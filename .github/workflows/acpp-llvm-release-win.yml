@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         clang_version: ['18']
-        base_compiler: ['17.0']
+        base_compiler: ['18.1']
         cuda: ['12.6.1']
         cuda_or_rocm: ['cuda']
         os: ['windows-2022']
@@ -119,7 +119,7 @@ jobs:
           -DLLVM_EXTERNAL_ADAPTIVECPP_SOURCE_DIR="$env:GITHUB_WORKSPACE/AdaptiveCpp" `
           -DLLVM_ADAPTIVECPP_LINK_INTO_TOOLS=ON `
           -DWITH_OPENCL_BACKEND=OFF `
-          -DBoost_DIR="$env:GITHUB_WORKSPACE\lib\cmake\Boost-1.83.0" `
+          -DBoost_DIR="$env:GITHUB_WORKSPACE/lib/cmake/Boost-1.83.0" `
           -DLLVM_TOOL_BUGPOINT_BUILD=OFF `
           -DOPENMP_ENABLE_LIBOMPTARGET=OFF `
           -DLLVM_INCLUDE_TESTS=OFF `
@@ -139,7 +139,7 @@ jobs:
         cmake -GNinja -DACPP_TARGETS="omp" `
           -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp" `
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
-          -DBoost_DIR="$env:GITHUB_WORKSPACE\lib\cmake\Boost-1.83.0" `
+          -DBoost_DIR="$env:GITHUB_WORKSPACE/lib/cmake/Boost-1.83.0" `
           -DLLVM_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/llvm"
         ninja -j2
     - name: build generic SSCP tests
@@ -150,7 +150,7 @@ jobs:
         cmake -GNinja -DACPP_TARGETS="generic" `
           -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp" `
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
-          -DBoost_DIR="$env:GITHUB_WORKSPACE\lib\cmake\Boost-1.83.0" `
+          -DBoost_DIR="$env:GITHUB_WORKSPACE/lib/cmake/Boost-1.83.0" `
           -DLLVM_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/llvm"
         ninja -j2
     - name: run CPU tests
