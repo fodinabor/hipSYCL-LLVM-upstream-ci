@@ -108,21 +108,21 @@ jobs:
         md build
         cd build
 
-        cmake ../llvm/llvm -GNinja ^ 
-          -DCMAKE_BUILD_TYPE=Release ^ 
-          -DCMAKE_INSTALL_PREFIX=%GITHUB_WORKSPACE%/install ^ 
-          -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" ^ 
-          -DLLVM_ENABLE_PROJECTS="clang;openmp;lld;compiler-rt" ^ 
-          -DLLVM_PARALLEL_LINK_JOBS=1 ^ 
-          -DLLVM_EXTERNAL_PROJECTS=AdaptiveCpp ^ 
-          -DLLVM_EXTERNAL_ADAPTIVECPP_SOURCE_DIR=%GITHUB_WORKSPACE%/AdaptiveCpp ^ 
-          -DLLVM_ADAPTIVECPP_LINK_INTO_TOOLS=ON ^ 
-          -DWITH_OPENCL_BACKEND=OFF ^ 
-          -DBoost_DIR=%GITHUB_WORKSPACE%\lib\cmake\Boost-1.83.0 ^ 
-          -DLLVM_TOOL_BUGPOINT_BUILD=OFF ^ 
-          -DOPENMP_ENABLE_LIBOMPTARGET=OFF ^ 
-          -DLLVM_INCLUDE_TESTS=OFF ^ 
-          -DCMAKE_C_COMPILER_LAUNCHER=sccache ^ 
+        cmake ../llvm/llvm -GNinja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=%GITHUB_WORKSPACE%/install \
+          -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
+          -DLLVM_ENABLE_PROJECTS="clang;openmp;lld;compiler-rt" \
+          -DLLVM_PARALLEL_LINK_JOBS=1 \
+          -DLLVM_EXTERNAL_PROJECTS=AdaptiveCpp \
+          -DLLVM_EXTERNAL_ADAPTIVECPP_SOURCE_DIR=%GITHUB_WORKSPACE%/AdaptiveCpp \
+          -DLLVM_ADAPTIVECPP_LINK_INTO_TOOLS=ON \
+          -DWITH_OPENCL_BACKEND=OFF \
+          -DBoost_DIR=%GITHUB_WORKSPACE%\lib\cmake\Boost-1.83.0 \
+          -DLLVM_TOOL_BUGPOINT_BUILD=OFF \
+          -DOPENMP_ENABLE_LIBOMPTARGET=OFF \
+          -DLLVM_INCLUDE_TESTS=OFF \
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
         ninja -j2 install
@@ -135,9 +135,9 @@ jobs:
       run: |
         md %GITHUB_WORKSPACE%/build/tests-cpu
         cd %GITHUB_WORKSPACE%/build/tests-cpu
-        cmake -GNinja -DACPP_TARGETS="omp" ^ 
-          -DAdaptiveCpp_DIR=%GITHUB_WORKSPACE%/install/lib/cmake/AdaptiveCpp ^ 
-          %GITHUB_WORKSPACE%/AdaptiveCpp/tests ^ 
+        cmake -GNinja -DACPP_TARGETS="omp" \
+          -DAdaptiveCpp_DIR=%GITHUB_WORKSPACE%/install/lib/cmake/AdaptiveCpp \
+          %GITHUB_WORKSPACE%/AdaptiveCpp/tests \
           -DLLVM_DIR=%GITHUB_WORKSPACE%/install/lib/cmake/llvm
         ninja -j2
     - name: build generic SSCP tests
@@ -146,9 +146,9 @@ jobs:
       run: |
         md %GITHUB_WORKSPACE%/build/tests-sscp
         cd %GITHUB_WORKSPACE%/build/tests-sscp
-        cmake -GNinja -DACPP_TARGETS="generic" ^
-          -DAdaptiveCpp_DIR=%GITHUB_WORKSPACE%/install/lib/cmake/AdaptiveCpp ^
-          %GITHUB_WORKSPACE%/AdaptiveCpp/tests ^
+        cmake -GNinja -DACPP_TARGETS="generic" \
+          -DAdaptiveCpp_DIR=%GITHUB_WORKSPACE%/install/lib/cmake/AdaptiveCpp \
+          %GITHUB_WORKSPACE%/AdaptiveCpp/tests \
           -DLLVM_DIR=%GITHUB_WORKSPACE%/install/lib/cmake/llvm
         ninja -j2
     - name: run CPU tests
