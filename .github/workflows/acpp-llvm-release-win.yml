@@ -74,6 +74,7 @@ jobs:
         method: local
         log-file-suffix: ${{matrix.clang_version}}_${{matrix.os}}.txt
         cuda: ${{matrix.cuda}}
+        sub-packages: '["nvcc", "cudart", "nvfatbin"]'
     - name: Download Ninja
       shell: powershell
       run: |
@@ -138,6 +139,7 @@ jobs:
         cmake -GNinja -DACPP_TARGETS="omp" `
           -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp" `
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
+          -DBoost_DIR="$env:GITHUB_WORKSPACE\lib\cmake\Boost-1.83.0" `
           -DLLVM_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/llvm"
         ninja -j2
     - name: build generic SSCP tests
@@ -148,6 +150,7 @@ jobs:
         cmake -GNinja -DACPP_TARGETS="generic" `
           -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp" `
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
+          -DBoost_DIR="$env:GITHUB_WORKSPACE\lib\cmake\Boost-1.83.0" `
           -DLLVM_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/llvm"
         ninja -j2
     - name: run CPU tests
