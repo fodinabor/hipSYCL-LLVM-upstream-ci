@@ -96,7 +96,7 @@ jobs:
         7z.exe x boost.7z
         cd $boostFolderName
         .\bootstrap.bat
-        .\b2.exe toolset=clang-win address-model=64 variant=release --build-type=complete install --prefix=$env:GITHUB_WORKSPACE/install
+        .\b2.exe toolset=clang-win address-model=64 variant=debug,release --build-type=complete install --prefix=$env:GITHUB_WORKSPACE/install
 
     - name: build Adaptive Cpp
       shell: powershell
@@ -137,6 +137,7 @@ jobs:
         md $env:GITHUB_WORKSPACE/build/tests-cpu
         cd $env:GITHUB_WORKSPACE/build/tests-cpu
         cmake -GNinja -DACPP_TARGETS="omp" `
+          -DCMAKE_BUILD_TYPE=Release `
           -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp" `
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
           -DBoost_DIR="$env:GITHUB_WORKSPACE/lib/cmake/Boost-1.83.0" `
@@ -148,6 +149,7 @@ jobs:
         md $env:GITHUB_WORKSPACE/build/tests-sscp
         cd $env:GITHUB_WORKSPACE/build/tests-sscp
         cmake -GNinja -DACPP_TARGETS="generic" `
+          -DCMAKE_BUILD_TYPE=Release `
           -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp" `
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
           -DBoost_DIR="$env:GITHUB_WORKSPACE/lib/cmake/Boost-1.83.0" `
