@@ -87,8 +87,10 @@ jobs:
       shell: powershell
       run: |
         $env:PATH = "$env:LLVM_PATH\bin;$env:PATH"
-        $env:CC = "sccache clang-cl"
-        $env:CXX = "sccache clang-cl"
+        $env:CC = "clang-cl"
+        $env:CXX = "clang-cl"
+
+        "using clang-win : : sccache.exe clang-cl.exe ;" >> "$env:USERPROFILE\user-config.jam"
 
         $boostURL = "https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.7z"
         $boostFolderName = $boostUrl.Split("/")[-1].Split(".")[0]
