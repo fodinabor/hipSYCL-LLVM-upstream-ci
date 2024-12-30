@@ -96,7 +96,7 @@ jobs:
         7z.exe x boost.7z
         cd $boostFolderName
         .\bootstrap.bat
-        .\b2.exe toolset=clang-win address-model=64 variant=debug,release --build-type=complete install --prefix=$env:GITHUB_WORKSPACE/install
+        .\b2.exe toolset=clang-win address-model=64 variant=release --build-type=complete install --prefix=$env:GITHUB_WORKSPACE/install
 
     - name: build Adaptive Cpp
       shell: powershell
@@ -105,9 +105,8 @@ jobs:
         $env:CC = "clang-cl"
         $env:CXX = "clang-cl"
 
-        cd $env:GITHUB_WORKSPACE
-        md build
-        cd build
+        md $env:GITHUB_WORKSPACE/build/acpp-llvm
+        cd $env:GITHUB_WORKSPACE/build/acpp-llvm
 
         cmake "$env:GITHUB_WORKSPACE/llvm/llvm" -GNinja `
           -DCMAKE_BUILD_TYPE=Release `
@@ -129,8 +128,8 @@ jobs:
         ninja -j2 install
 
         echo "CC=clang" >> $env:GITHUB_ENV
-        echo "CXX=clang++" >> $env:GITHUB_ENV
-        echo "PATH=$env:GITHUB_WORKSPACE/install/bin:$env:PATH" >> $env:GITHUB_ENV
+        echo "CXX=clang" >> $env:GITHUB_ENV
+        echo "PATH=$env:GITHUB_WORKSPACE\install\bin:$env:PATH" >> $env:GITHUB_ENV
     - name: build CPU tests
       shell: powershell
       run: |
@@ -141,7 +140,6 @@ jobs:
           -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/AdaptiveCpp" `
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
           -DBoost_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/Boost-1.83.0" `
-          -DLLVM_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/llvm"
         ninja -j2
     - name: build generic SSCP tests
       if: matrix.clang_version >= 14
@@ -153,7 +151,6 @@ jobs:
           -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/AdaptiveCpp" `
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
           -DBoost_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/Boost-1.83.0" `
-          -DLLVM_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/llvm"
         ninja -j2
     - name: run CPU tests
       run: |
