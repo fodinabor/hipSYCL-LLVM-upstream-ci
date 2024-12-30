@@ -138,7 +138,7 @@ jobs:
         cd $env:GITHUB_WORKSPACE/build/tests-cpu
         cmake -GNinja -DACPP_TARGETS="omp" `
           -DCMAKE_BUILD_TYPE=Release `
-          -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp" `
+          -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/AdaptiveCpp" `
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
           -DBoost_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/Boost-1.83.0" `
           -DLLVM_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/llvm"
@@ -150,9 +150,9 @@ jobs:
         cd $env:GITHUB_WORKSPACE/build/tests-sscp
         cmake -GNinja -DACPP_TARGETS="generic" `
           -DCMAKE_BUILD_TYPE=Release `
-          -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp" `
+          -DAdaptiveCpp_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/AdaptiveCpp" `
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
-          -DBoost_DIR="$env:GITHUB_WORKSPACE/lib/cmake/Boost-1.83.0" `
+          -DBoost_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/Boost-1.83.0" `
           -DLLVM_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/llvm"
         ninja -j2
     - name: run CPU tests
