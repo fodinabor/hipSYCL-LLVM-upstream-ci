@@ -96,8 +96,7 @@ jobs:
         7z.exe x boost.7z
         cd $boostFolderName
         .\bootstrap.bat
-        .\b2.exe --with-context --with-fiber --with-atomic --with-filesystem --with-test toolset=clang-win address-model=64 variant=release --build-type=complete install --prefix=$env:GITHUB_WORKSPACE/install
-        .\b2.exe --with-context --with-fiber --with-atomic --with-filesystem --with-test toolset=clang address-model=64 variant=release --build-type=complete install --prefix=$env:GITHUB_WORKSPACE/install
+        .\b2.exe toolset=clang-win address-model=64 variant=release --build-type=complete install --prefix=$env:GITHUB_WORKSPACE/install
 
     - name: build Adaptive Cpp
       shell: powershell
