@@ -129,8 +129,8 @@ jobs:
 
         ninja -j2 install
 
-        echo "CC=clang" >> $env:GITHUB_ENV
-        echo "CXX=clang" >> $env:GITHUB_ENV
+        echo "CC=$env:GITHUB_WORKSPACE\install\bin\clang.exe" >> $env:GITHUB_ENV
+        echo "CXX=$env:GITHUB_WORKSPACE\install\bin\clang.exe" >> $env:GITHUB_ENV
         echo "PATH=$env:GITHUB_WORKSPACE\install\bin:$env:PATH" >> $env:GITHUB_ENV
     - name: build CPU tests
       shell: powershell
