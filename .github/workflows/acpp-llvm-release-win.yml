@@ -90,7 +90,7 @@ jobs:
         $env:CC = "clang-cl"
         $env:CXX = "clang-cl"
 
-        "using clang-win : : sccache.exe clang-cl.exe ;" >> "$env:USERPROFILE\user-config.jam"
+        echo "using clang-win : : sccache.exe clang-cl.exe ;" >> "$env:USERPROFILE\user-config.jam"
 
         $boostURL = "https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.7z"
         $boostFolderName = $boostUrl.Split("/")[-1].Split(".")[0]
@@ -125,7 +125,8 @@ jobs:
           -DOPENMP_ENABLE_LIBOMPTARGET=OFF `
           -DLLVM_INCLUDE_TESTS=OFF `
           -DCMAKE_C_COMPILER_LAUNCHER=sccache `
-          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache `
+          -DLLVM_ENABLE_ASSERTIONS=ON
 
         ninja -j2 install
 
