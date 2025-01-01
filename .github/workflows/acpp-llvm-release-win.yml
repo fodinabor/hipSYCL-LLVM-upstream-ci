@@ -90,8 +90,6 @@ jobs:
         $env:CC = "clang-cl"
         $env:CXX = "clang-cl"
 
-        "using clang-win : : sccache.exe clang-cl.exe ;" | Out-File -FilePath "$env:USERPROFILE\user-config.jam"
-
         $boostURL = "https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.7z"
         $boostFolderName = $boostUrl.Split("/")[-1].Split(".")[0]
         Invoke-WebRequest $boostURL -OutFile boost.7z
