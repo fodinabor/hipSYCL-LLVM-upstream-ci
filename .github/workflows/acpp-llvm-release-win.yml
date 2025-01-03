@@ -157,11 +157,11 @@ jobs:
     - name: run CPU tests
       run: |
         cd $env:GITHUB_WORKSPACE/build/tests-cpu
-        ./sycl_tests
+        .\sycl_tests
     - name: run SSCP CPU tests
       run: |
         cd $env:GITHUB_WORKSPACE/build/tests-sscp
-        ./sycl_tests
+        .\sycl_tests
     - uses: actions/upload-artifact@v4
       with:
         name: AdaptiveCpp-LLVM${{matrix.clang_version}}-Win
