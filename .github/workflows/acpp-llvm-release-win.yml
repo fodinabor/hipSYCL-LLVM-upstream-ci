@@ -125,8 +125,7 @@ jobs:
           -DOPENMP_ENABLE_LIBOMPTARGET=OFF `
           -DLLVM_INCLUDE_TESTS=OFF `
           -DCMAKE_C_COMPILER_LAUNCHER=sccache `
-          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache `
-          -DLLVM_ENABLE_ASSERTIONS=ON
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
         ninja -j2 install
 
