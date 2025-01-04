@@ -159,7 +159,7 @@ jobs:
         cd $env:GITHUB_WORKSPACE/build/tests-cpu
         $env:ACPP_DEBUG_LEVEL = 3
         dir
-        dumpbin /dependents 
+        dumpbin /dependents sycl_tests.exe
         .\sycl_tests.exe
     - name: run SSCP CPU tests
       run: |
