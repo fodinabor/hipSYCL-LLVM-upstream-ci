@@ -132,6 +132,9 @@ jobs:
         echo "CC=$env:GITHUB_WORKSPACE\install\bin\clang.exe" >> $env:GITHUB_ENV
         echo "CXX=$env:GITHUB_WORKSPACE\install\bin\clang.exe" >> $env:GITHUB_ENV
         echo "PATH=$env:GITHUB_WORKSPACE\install\bin:$env:PATH" >> $env:GITHUB_ENV
+
+        dir $env:GITHUB_WORKSPACE\install\
+        dir $env:GITHUB_WORKSPACE\install\bin
     - name: build CPU tests
       shell: powershell
       run: |
