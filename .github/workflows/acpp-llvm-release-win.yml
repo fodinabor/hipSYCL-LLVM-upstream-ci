@@ -81,7 +81,7 @@ jobs:
         $ninjaURL = "https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-win.zip"
         Invoke-WebRequest $ninjaURL -OutFile ninja.zip
         Expand-Archive -Path ninja.zip -DestinationPath $env:GITHUB_WORKSPACE\ninja_install
-        echo "PATH=$env:GITHUB_WORKSPACE/ninja_install:$env:PATH" >> $env:GITHUB_ENV
+        echo "PATH=$env:GITHUB_WORKSPACE/ninja_install;$env:PATH" >> $env:GITHUB_ENV
     - name: Build boost
       if: steps.cache-boost.outputs.cache-hit != 'true'
       shell: powershell
@@ -131,7 +131,7 @@ jobs:
 
         echo "CC=$env:GITHUB_WORKSPACE\install\bin\clang.exe" >> $env:GITHUB_ENV
         echo "CXX=$env:GITHUB_WORKSPACE\install\bin\clang.exe" >> $env:GITHUB_ENV
-        echo "PATH=$env:GITHUB_WORKSPACE\install\bin:$env:PATH" >> $env:GITHUB_ENV
+        echo "PATH=$env:GITHUB_WORKSPACE\install\bin;$env:PATH" >> $env:GITHUB_ENV
 
         dir $env:GITHUB_WORKSPACE\install\
         dir $env:GITHUB_WORKSPACE\install\bin
@@ -146,8 +146,16 @@ jobs:
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
           -DBoost_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/Boost-1.83.0"
         ninja -j2
+    - name: debug
+      shell: bash
+      run: |
+        cd $GITHUB_WORKSPACE/build/tests-cpu
+        ldd sycl_tests.exe
+    - name: run CPU tests
+      run: |
+        cd $env:GITHUB_WORKSPACE/build/tests-cpu
+        .\sycl_tests.exe
     - name: build generic SSCP tests
-      if: matrix.clang_version >= 14
       run: |
         md $env:GITHUB_WORKSPACE/build/tests-sscp
         cd $env:GITHUB_WORKSPACE/build/tests-sscp
@@ -157,23 +165,9 @@ jobs:
           "$env:GITHUB_WORKSPACE/AdaptiveCpp/tests" `
           -DBoost_DIR="$env:GITHUB_WORKSPACE/install/lib/cmake/Boost-1.83.0"
         ninja -j2
-    - name: debug
-      shell: bash
-      run: |
-        cd $GITHUB_WORKSPACE/build/tests-cpu
-        ldd sycl_tests.exe
-        dependencies.exe -chain sycl_tests.exe -depth 2
-    - name: run CPU tests
-      run: |
-        cd $env:GITHUB_WORKSPACE/build/tests-cpu
-        $env:ACPP_DEBUG_LEVEL = 3
-        dir
-        dumpbin /dependents sycl_tests.exe
-        .\sycl_tests.exe
     - name: run SSCP CPU tests
       run: |
         cd $env:GITHUB_WORKSPACE/build/tests-sscp
-        $env:ACPP_DEBUG_LEVEL = 3
         .\sycl_tests.exe
     - uses: actions/upload-artifact@v4
       with:
