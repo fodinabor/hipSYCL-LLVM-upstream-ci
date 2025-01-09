@@ -93,10 +93,12 @@ jobs:
         "using clang-win : : sccache.exe clang-cl.exe ;" | Out-File -FilePath "$env:USERPROFILE\user-config.jam"
 
         $boostURL = "https://archives.boost.io/release/1.83.0/source/boost_1_83_0.7z"
-        $boostFolderName = $boostUrl.Split("/")[-1].Split(".")[0]
         Invoke-WebRequest $boostURL -OutFile boost.7z
         7z.exe x boost.7z
-        cd $boostFolderName
+    - name: Build boost
+      shell: powershell
+      run: |
+        cd $env:GITHUB_WORKSPACE/boost_1_83_0
         .\bootstrap.bat
         .\b2.exe toolset=clang-win address-model=64 variant=release --build-type=complete install --prefix=$env:GITHUB_WORKSPACE/install
 
