@@ -75,11 +75,14 @@ jobs:
     - name: install ROCm
       if: ${{ matrix.cuda_or_rocm == 'rocm' }}
       run: |
-        sudo apt install libnuma-dev unzip
+        [[ ${{matrix.os}} == ubuntu-20.04 ]] && CODENAME=focal
+        [[ ${{matrix.os}} == ubuntu-22.04 ]] && CODENAME=jammy
+        sudo apt-get install -y libnuma-dev cmake unzip
         wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
-        echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/${{matrix.rocm_version}} jammy main' | sudo tee /etc/apt/sources.list.d/rocm.list
-        sudo apt update
-        sudo apt install rocm-dev
+        echo "deb [arch=amd64] https://repo.radeon.com/rocm/apt/${{matrix.rocm_version}} $CODENAME main" | sudo tee /etc/apt/sources.list.d/rocm.list
+        printf 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' | sudo tee /etc/apt/preferences.d/rocm-pin-600
+        sudo apt-get update
+        sudo apt-get install -y rocm-dev
         echo "TARGETS_TO_BUILD=;AMDGPU" >> $GITHUB_ENV
         echo "ENABLE_PROJECTS=;lld" >> $GITHUB_ENV
     - name: install boost (from apt)
