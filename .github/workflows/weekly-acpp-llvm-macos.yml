@@ -91,11 +91,12 @@ jobs:
         cd ${GITHUB_WORKSPACE}/build/tests-sscp
         cmake -GNinja -DACPP_TARGETS="generic" -DAdaptiveCpp_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/AdaptiveCpp ${GITHUB_WORKSPACE}/AdaptiveCpp/tests  -DLLVM_DIR=${GITHUB_WORKSPACE}/install/lib/cmake/llvm
         ninja -j2
-    - name: run CPU tests
-      run: |
-        cd ${GITHUB_WORKSPACE}/build/tests-cpu
-        LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib ./sycl_tests
     - name: run SSCP CPU tests
       run: |
         cd ${GITHUB_WORKSPACE}/build/tests-sscp
+        LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib ./sycl_tests
+    - name: run CPU tests
+      run: |
+        ulimit -s 65535
+        cd ${GITHUB_WORKSPACE}/build/tests-cpu
         LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib ./sycl_tests
