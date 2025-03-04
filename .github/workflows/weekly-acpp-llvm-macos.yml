@@ -97,6 +97,5 @@ jobs:
         LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib ./sycl_tests
     - name: run CPU tests
       run: |
-        ulimit -s 65535
         cd ${GITHUB_WORKSPACE}/build/tests-cpu
         LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib ./sycl_tests
